@@ -1,23 +1,63 @@
 <!DOCTYPE html>
+
+<script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"
+      integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+
+<!-- Optional theme -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css"
+      integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+
+<!-- Latest compiled and minified JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"
+        integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS"
+        crossorigin="anonymous"></script>
+
 <html lang="en">
 <body>
-    <h1>Submit your program for testing.</h1>
-    <h2>(it will be converted to uppercase)</h2>
-    <form action="." method=post enctype="multipart/form-data">
-        <p>
-        <input type="radio" name="team" id="team1" value="team1"> Team 1 </input><br>
-        <input type="radio" name="team" id="team2" value="team2"> Team 2 </input><br>
-        <input type="radio" name="team" id="team3" value="team3"> Team 3 </input><br>
-        </p>
+<h1>Submit your program for testing.</h1>
+<h2>You must upload your files bundled in a zip or tar file, without any sub-directories.</h2>
+<h3>For example, take your files "setup.sh", "run.sh" and any other files your program uses, and create a zip or tar.
+    Do not create a tar of the folder containing these files. </h3>
+<form action="." method=post enctype="multipart/form-data">
+    <p>
+        <input type="radio" name="team" id="teamA" value="teamA"> Team A </input><br>
+        <input type="radio" name="team" id="teamB" value="teamB"> Team B </input><br>
+        <input type="radio" name="team" id="teamC" value="teamC"> Team C </input><br>
+        <input type="radio" name="team" id="teamD" value="teamD"> Team D </input><br>
+        <input type="radio" name="team" id="teamE" value="teamE"> Team E </input><br>
+    </p>
 
-        <p>
-        <input type="radio" name="lang" id="python" value="python"> Python </input><br>
-        <input type="radio" name="lang" id="java" value="java"> Java </input><br>
-        <input type="radio" name="lang" id="c++" value="c++"> C++ </input><br>
-        </p>
+    <input type="file" name="file"><br/><br/>
+    <input type="submit" value="Upload">
+</form>
+<table class="table table-condensed" style="border-collapse:collapse;">
+    <thead>
+    <tr>
+        <th>Submission time</th>
+        <th>Team Name</th>
+        <th>Score</th>
+        <th>Details</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for result in results %}
+        <tr data-toggle="collapse" data-target="#{{ loop.index }}" class="accordion-toggle">
+            <td>{{ result.time }}</td>
+            <td>{{ result.team }}</td>
+            <td>{{ result.score }}</td>
 
-        <input type="file" name="file"><br /><br />
-        <input type="submit" value="Upload">
-    </form>
+            <td> Click to expand/collapse. <br/>
+                <div id="{{ loop.index }}" class="accordion-body collapse">{{ result.result }}</div>
+            </td>
+
+            {#            <td>{{ result.result }}</td>#}
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+
 </body>
 </html>

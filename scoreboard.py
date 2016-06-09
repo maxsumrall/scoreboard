@@ -1,5 +1,7 @@
+import datetime
 import json
 import os
+import sys
 import uuid
 
 import pika
@@ -8,19 +10,24 @@ from werkzeug import secure_filename
 
 app = Flask(__name__)
 
-config_file = open("config.txt", "r")
+config_file_path = sys.argv[1]
+
+config_file = open(config_file_path, "r")
 server_uri = config_file.readline().strip()
 queue_user = config_file.readline().strip()
 queue_pw = config_file.readline().strip()
+path_to_grader = config_file.readline().strip()
+path_to_upload = config_file.readline().strip()
+path_to_results = config_file.readline().strip()
 
-app.config['UPLOAD_FOLDER'] = '/Users/Max/Desktop/test/'
+app.config['UPLOAD_FOLDER'] = path_to_upload
 app.config['RABBIT_MQ'] = server_uri
 # These are the extension that we are accepting to be uploaded
-app.config['ALLOWED_EXTENSIONS'] = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
+app.config['ALLOWED_EXTENSIONS'] = {'zip', 'tar'}
 
 credentials = pika.PlainCredentials(queue_user, queue_pw)
 connection = pika.BlockingConnection(pika.ConnectionParameters(
-    app.config['RABBIT_MQ'], 5672, '/', credentials))
+    app.config['RABBIT_MQ'], 5672, '/', credentials, heartbeat_interval=0))
 channel = connection.channel()
 channel.queue_declare(queue='jobs')
 
@@ -35,18 +42,23 @@ def allowed_file(filename):
 def index():
     global channel
     if request.method == 'GET':
-        return render_template("index.html")
+        results = []
+        files = os.listdir(path_to_results)
+        for file in files:
+            data = json.load(open(path_to_results + file, "r"))
+            results.append(data)
+        results = sorted(results, key=lambda k: k["time"], reverse=True)
+        return render_template("index.html", results=results)
 
-    option = request.form['lang']
     team = request.form['team']
-    print(team + " " + option)
+    print(team)
 
     # Get the name of the uploaded file
     file = request.files['file']
     # Check if the file is one of the allowed types/extensions
     if file and allowed_file(file.filename):
         # Make the filename safe, remove unsupported chars
-        filename = secure_filename(str(uuid.uuid4()) + "_" + file.filename)
+        filename = secure_filename(str(uuid.uuid4()) + "_" + str(file.filename).lower())
         # Move the file form the temporal folder to
         # the upload folder we setup
         print("Upload: " + file.filename)
@@ -55,7 +67,8 @@ def index():
         # Redirect the user to the uploaded_file route, which
         # will basicaly show on the browser the uploaded file
 
-        bundle = {"filename": filename, "team": team, "lang": option}
+        bundle = {"filename": filename, "team": team, 'uri': upload_location}
+        bundle["time"] = str(datetime.datetime.now())
 
         channel.basic_publish(exchange='',
                               routing_key='jobs',
